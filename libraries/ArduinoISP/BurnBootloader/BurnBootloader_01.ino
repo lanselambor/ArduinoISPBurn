@@ -94,10 +94,11 @@ void writeFuse()
     //Serial.println("begin to write fuse");
 
     //unsigned char valFuse[3] = {0xff, 0xde, 0x05};       //lotus
-    unsigned char valFuse[3] = {0xde, 0xd8, 0xfb};     // low, high, ext, leonardo
+    //unsigned char valFuse[3] = {0xde, 0xd8, 0xfb};     // low, high, ext, leonardo
     //unsigned char valFuse[3] = {0xff, 0xde, 0x05};      // arduino uno
     //unsigned char valFuse[3] = {0x1e, 0x95, 0x0f};
-    
+    unsigned char valFuse[3] = {0xff, 0xda, 0x05};         //Fio
+	
     for(int i = 0; i<3; i++)
     {
         startProgramming();
@@ -146,7 +147,7 @@ const byte PIN_LED_RED      = 6;
 const byte PIN_LED_GREEN    = 5;
 const byte PIN_LED_TEST     = 3;
 const byte PIN_BTN_START    = 2;
-const byte PIN_BTN_ROLL     = A1;
+const byte PIN_BTN_ROLL     = A0;
 
 // control speed of programming
 const byte BB_DELAY_MICROSECONDS = 1;       // 4
@@ -299,14 +300,14 @@ byte BB_SPITransfer (byte c)
 
         // delay between rise and fall of clock
         //delayMicroseconds (delay_time_spi); 
-        SPI_Delay(1);        
+        SPI_Delay(delay_time_spi);        
         
         // clock low
         BB_SCK_PORT &= ~_BV (BB_SCK_BIT);
 
         // delay between rise and fall of clock
         //delayMicroseconds (delay_time_spi);
-        SPI_Delay(1);       
+        SPI_Delay(delay_time_spi);       
     }
 
     return c;
@@ -788,7 +789,7 @@ void startProgramming ()
         if(millis()-timer_tmp > 2000)
         {
             timer_tmp = millis();
-            //delay_time_spi++;
+            delay_time_spi++;
             //rial.print("CLOCK TOO FAST, DELAY TIME CHANGE TO: ");  //uncomment by lambor
             Serial.println(delay_time_spi);
         }
@@ -1031,6 +1032,7 @@ void setup ()
     pinMode(PIN_LED_RED, OUTPUT);
         
     digitalWrite(PIN_BTN_START, HIGH);
+    //digitalWrite(PIN_BTN_ROLL, LOW);
 
 #ifdef ENABLE_LCD    
     //Init LCD 
@@ -1098,44 +1100,36 @@ bool writeFlashContents ()
 void loop ()
 {
     static bool startProgram = false;
-    
+START:    
     greenOn();
-    
-//START:    
+	
     if(digitalRead(PIN_BTN_ROLL) == HIGH)
     {
-      //delay(50);
+      delay(50);
 	  while(digitalRead(PIN_BTN_ROLL) == HIGH);
-      //if(digitalRead(PIN_BTN_ROLL) == HIGH)
-      //{
 #ifdef ENABLE_LCD        
-          lcd.clear();          
-          g_number++;
-          if(g_number == 9)
-          {
-              g_number = 0;
-          }
-          lcd.setCursor(0, 0);
-          lcd.print(name[g_number]);
-          lcd.setCursor(0, 1);          
-          lcd.print("Ready to program");    
+      lcd.clear();          
+      g_number++;
+      if(g_number == 9)
+      {
+          g_number = 0;
+      }
+      lcd.setCursor(0, 0);
+      lcd.print(name[g_number]);
+      lcd.setCursor(0, 1);          
+      lcd.print("Ready to program");    
 #endif
- 
-      //}
     }
     
     if(digitalRead(PIN_BTN_START)==HIGH)
     {
-        //delay(50);
-        while(digitalRead(PIN_BTN_START) == HIGH);
-        //if(digitalRead(PIN_BTN_START)==HIGH)
-        //{
-            startProgram = true;
+        delay(50);
+        while(digitalRead(PIN_BTN_START) == HIGH);        
+        startProgram = true;
 #ifdef ENABLE_LCD            
-            lcd.setCursor(0, 1);          
-            lcd.print("programming...  ");            
+        lcd.setCursor(0, 1);          
+        lcd.print("programming...  ");            
 #endif            
-        //}
     }
     //waitBtn();
     unsigned long timer_tmp = millis();
@@ -1146,7 +1140,7 @@ void loop ()
         isVerifyOk = 0;
         redOn();
         greenOff();
-
+		
         Serial.println ();
         Serial.println (F("--------- Starting ---------"));
         Serial.println ();
@@ -1154,24 +1148,25 @@ void loop ()
         startProgramming ();
 
         getSignature ();
-        getFuseBytes ();
-        
-        //while(1);
+        getFuseBytes ();        
 
         // don't have signature? don't proceed
         if (foundSig == -1)
         {
             //Serial.println (F("Halted."));
             //Serial.println("too fast, delay_time_spi++");
-            delay_time_spi++;
-            //goto START;
-            while(1);
+            //delay_time_spi++;
+#ifdef ENABLE_LCD            
+            lcd.setCursor(0, 1);          
+            lcd.print("Error program ");
+#endif            
+            goto START;            
         }
 
         redOff();
 
         if (allowTargetToRun)
-        stopProgramming ();
+        stopProgramming (); 
 
         if (allowTargetToRun)
         startProgramming ();
