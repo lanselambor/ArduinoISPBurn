@@ -11,7 +11,7 @@ Using Arduino Mega 2560 burning bootloader to another Arduino board.<br>
 
 ### **3.Operation** <br>
 * SD card init successfully with Green led on. <br>
-* Press button roll to change program to burn. <br>
+* Press button roll to change program. <br>
 * Press button start to begin burning program. <br>
 * Red led on while burning. <br>
 * Red led off and green led on if burning succeeded. 
